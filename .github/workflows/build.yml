@@ -15,7 +15,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest]
         arch: [x64, arm64]
 
     steps:
@@ -69,24 +69,8 @@ jobs:
           ARCH: ${{ matrix.arch }}
         run: pnpm run make --arch=${{ matrix.arch }}
 
-      # Delete existing release if it exists
-      - name: Delete existing release
-        # but do this only once per job run
-        if: startsWith(github.ref, 'refs/tags/') && matrix.os == 'macos-latest' && matrix.arch == 'arm64'
-        uses: dev-drprasad/delete-tag-and-release@v1.0
-        with:
-          tag_name: ${{ github.ref_name }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          delete_release: true
-
-      # Create new release
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
+      - uses: ncipollo/release-action@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: |
-            out/**/*.zip
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          allowUpdates: true
+          artifacts: "out/**/*.zip"
